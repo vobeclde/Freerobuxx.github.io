@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>welcome</title>
+<style>
+  body { font-family: sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+  .notice { font-size: 13px; color: #666; }
+  code { background: #eee; padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>welcome</h1>
+  <p>your ip is <code id="ip">loading...</code></p>
+  <p class="notice">
+    this site records visitor ip addresses, timestamps, and browser info
+    to keep it secure and measure traffic.
+  </p>
+
+<script>
+  // Set this to your own server's /log endpoint (see the Flask route).
+  // Leave empty to only display the IP without storing anything.
+  const LOG_ENDPOINT = "";
+
+  (async () => {
+    const el = document.getElementById("ip");
+    let ip = null;
+    try {
+      const r = await fetch("https://api.ipify.org?format=json");
+      ip = (await r.json()).ip;
+      el.textContent = ip;
+    } catch (e) {
+      el.textContent = "unavailable";
+      return;
+    }
+
+    if (!LOG_ENDPOINT) return;
+    try {
+      await fetch(LOG_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ip,
+          time: new Date().toISOString(),
+          path: location.pathname,
+          ua: navigator.userAgent
+        })
+      });
+    } catch (e) { /* logging failed silently; page still works */ }
+  })();
+</script>
+</body>
+</html>
